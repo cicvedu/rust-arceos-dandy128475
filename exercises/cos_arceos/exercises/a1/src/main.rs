@@ -1,6 +1,6 @@
 #![cfg_attr(feature = "axstd", no_std)]
 #![cfg_attr(feature = "axstd", no_main)]
-
+#![feature(allocator_api)]
 #[macro_use]
 #[cfg(feature = "axstd")]
 extern crate axstd as std;
@@ -8,7 +8,7 @@ extern crate axstd as std;
 use std::collections::BTreeMap;
 use std::vec::Vec;
 
-// I AM NOT DONE
+
 
 fn test_vec() {
     const N: usize = 3;
@@ -47,3 +47,5 @@ fn main() {
     println!("Memory tests run OK!");
     println!("\n[ArceOS Tutorial]: A1 okay!");
 }
+
+
