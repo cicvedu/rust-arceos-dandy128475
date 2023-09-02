@@ -2,7 +2,7 @@ use alloc::{collections::VecDeque, sync::Arc};
 use core::ops::Deref;
 
 use crate::BaseScheduler;
-
+const TIME_SLICE: usize = 10;
 /// A task wrapper for the [`SimpleScheduler`].
 pub struct SimpleTask<T> {
     inner: T,
@@ -38,14 +38,20 @@ impl<T> Deref for SimpleTask<T> {
 ///
 /// As it's a cooperative scheduler, it does nothing when the timer tick occurs.
 ///
+/*pub struct SimpleScheduler<T> {
+    ready_queue: VecDeque<Arc<SimpleTask<T>>>,
+} */
 pub struct SimpleScheduler<T> {
+    time_slice: usize, // 时间片大小
     ready_queue: VecDeque<Arc<SimpleTask<T>>>,
 }
+
 
 impl<T> SimpleScheduler<T> {
     /// Creates a new empty [`SimpleScheduler`].
     pub const fn new() -> Self {
         Self {
+            time_slice: TIME_SLICE, // 初始化时间片计数器 ；add
             ready_queue: VecDeque::new(),
         }
     }
@@ -73,16 +79,35 @@ impl<T> BaseScheduler for SimpleScheduler<T> {
             .and_then(|idx| self.ready_queue.remove(idx))
     }
 
-    fn pick_next_task(&mut self) -> Option<Self::SchedItem> {
+    /*fn pick_next_task(&mut self) -> Option<Self::SchedItem> {
         self.ready_queue.pop_front()
+    }*/
+    fn pick_next_task(&mut self) -> Option<Self::SchedItem> {
+        if let Some(next_task) = self.ready_queue.pop_front() {
+            // 减少时间片计数器
+            self.time_slice -= 1;
+            
+            // 如果时间片用尽或队列为空，将任务重新放入队列
+            if self.time_slice == 0 || self.ready_queue.is_empty() {
+                self.time_slice = TIME_SLICE; // 重置时间片计数器
+                self.ready_queue.push_back(next_task.clone());
+            }
+    
+            Some(next_task)
+        } else {
+            None
+        }
     }
+    
 
     fn put_prev_task(&mut self, prev: Self::SchedItem, _preempt: bool) {
         self.ready_queue.push_back(prev);
     }
 
     fn task_tick(&mut self, _current: &Self::SchedItem) -> bool {
-        false // no reschedule
+       // false // no reschedule
+        self.ready_queue.push_back(Arc::clone(_current));
+        true // 返回true以触发任务切换
     }
 
     fn set_priority(&mut self, _task: &Self::SchedItem, _prio: isize) -> bool {

@@ -5,6 +5,9 @@ use alloc::{string::String, vec::Vec};
 use axfs_vfs::{VfsDirEntry, VfsNodeAttr, VfsNodeOps, VfsNodeRef, VfsNodeType};
 use axfs_vfs::{VfsError, VfsResult};
 use spin::RwLock;
+use alloc::borrow::ToOwned; // 引入ToOwned特性
+ // 引入ToString特性
+// 引入ToString特性
 
 use crate::file::FileNode;
 
@@ -66,6 +69,30 @@ impl DirNode {
         }
         children.remove(name);
         Ok(())
+    }
+    pub fn rename(&self, old_name: &str, new_name: &str) -> VfsResult {
+        if old_name == new_name {
+            // If the old name and new name are the same, do nothing.
+            return Ok(());
+        }
+        let mut children = self.children.write();
+
+        // Check if the old name exists in the directory.
+        if let Some(node) = children.remove(old_name) {
+            // Check if the new name already exists in the directory.
+            if children.contains_key(new_name) {
+                // If the new name already exists, restore the old name.
+                children.insert(old_name.to_owned(), node);
+                return Err(VfsError::AlreadyExists);
+            } else {
+                // Rename the node by inserting it with the new name.
+                children.insert(new_name.to_owned(), node);
+                return Ok(());
+            }
+        } else {
+            // If the old name doesn't exist, return an error.
+            return Err(VfsError::NotFound);
+        }
     }
 }
 
@@ -165,12 +192,16 @@ impl VfsNodeOps for DirNode {
         }
     }
 
-    fn rename(&self, _src: &str, _dst: &str) -> VfsResult {
+  /*   fn rename(&self, _src: &str, _dst: &str) -> VfsResult {
         todo!("Implement rename for ramfs!");
+    }*/
+    fn rename(&self, old_name: &str, new_name: &str) -> VfsResult {
+        self.rename(old_name, new_name)
     }
 
     axfs_vfs::impl_vfs_dir_default! {}
 }
+
 
 fn split_path(path: &str) -> (&str, Option<&str>) {
     let trimmed_path = path.trim_start_matches('/');

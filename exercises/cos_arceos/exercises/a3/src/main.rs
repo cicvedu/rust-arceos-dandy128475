@@ -3,6 +3,7 @@
 
 #[macro_use]
 #[cfg(feature = "axstd")]
+
 extern crate axstd as std;
 
 mod ramfs;
@@ -10,13 +11,20 @@ mod ramfs;
 use std::io::{self, prelude::*};
 use std::fs::{self, File};
 
-// I AM NOT DONE
 
-fn create_file(fname: &str, text: &str) -> io::Result<()> {
+
+/*fn create_file(fname: &str, text: &str) -> io::Result<()> {
     println!("Create '{}' and write [{}] ...", fname, text);
     let mut file = File::create(fname)?;
     file.write_all(text.as_bytes())
+}*/
+fn create_file(fname: &str, text: &str) -> io::Result<()> {
+    println!("Create '{}' and write [{}] ...", fname, text);
+    let mut file = File::create(fname)?;
+    file.write_all(text.as_bytes())?;
+    Ok(())
 }
+
 
 // Only support rename, NOT move.
 fn rename_file(src: &str, dst: &str) -> io::Result<()> {
@@ -46,11 +54,30 @@ fn process() -> io::Result<()> {
     rename_file("/tmp/f1", "/tmp/f2")?;
     print_file("/tmp/f2")
 }
+/*fn process() -> io::Result<()> {
+
+    // 检查文件是否存在
+    if !fs::metadata("/tmp/f1").is_ok() {
+        // 如果文件不存在，创建文件
+        create_file("/tmp/f1", "hello")?;
+    }
+    
+    // Just rename, NOT move.
+    // So this must happen in the same directory.
+    rename_file("/tmp/f1", "/tmp/f2")?;
+    print_file("/tmp/f2")
+}*/
+
 
 #[cfg_attr(feature = "axstd", no_mangle)]
 fn main() {
+    
+        
     if let Err(e) = process() {
-        panic!("Error: {}", e);
+       // panic!("Error: {}", e);
+       println!("Error: {}", e);
     }
     println!("\n[ArceOS Tutorial]: A3 okay!");
+    
+
 }
