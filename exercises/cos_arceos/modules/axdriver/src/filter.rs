@@ -20,7 +20,7 @@ impl<T> NetFilter<T> {
 use crate::BaseDriverOps;
 use crate::DeviceType;
 //use log::warn;
-use driver_net::{NetDriverOps, DevResult, NetBufPtr, DevError, EthernetAddress};
+use driver_net::{NetDriverOps, DevResult, NetBufPtr, DevError};
 
 pub struct NetFilter<T> {
    pub inner: T,
